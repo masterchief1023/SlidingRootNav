@@ -44,6 +44,7 @@ public class SlidingRootNavBuilder {
     private int menuLayoutRes;
 
     private List<RootTransformation> transformations;
+    private List<RootTransformation> menuTransformations;
 
     private List<DragListener> dragListeners;
 
@@ -64,6 +65,7 @@ public class SlidingRootNavBuilder {
     public SlidingRootNavBuilder(Activity activity) {
         this.activity = activity;
         this.transformations = new ArrayList<>();
+        this.menuTransformations = new ArrayList<>();
         this.dragListeners = new ArrayList<>();
         this.dragStateListeners = new ArrayList<>();
         this.gravity = SlideGravity.LEFT;
@@ -142,6 +144,11 @@ public class SlidingRootNavBuilder {
         return this;
     }
 
+    public SlidingRootNavBuilder addMenuTransformation(RootTransformation transformation){
+        menuTransformations.add(transformation);
+        return this;
+    }
+
     public SlidingRootNavBuilder addRootTransformation(RootTransformation transformation) {
         transformations.add(transformation);
         return this;
@@ -166,6 +173,7 @@ public class SlidingRootNavBuilder {
         SlidingRootNavLayout newRoot = createAndInitNewRoot(oldRoot);
 
         View menu = getMenuViewFor(newRoot);
+        newRoot.setMenuView(menu);
 
         initToolbarMenuVisibilityToggle(newRoot, menu);
 
@@ -193,6 +201,7 @@ public class SlidingRootNavBuilder {
         SlidingRootNavLayout newRoot = new SlidingRootNavLayout(activity);
         newRoot.setId(R.id.srn_root_layout);
         newRoot.setRootTransformation(createCompositeTransformation());
+        newRoot.setMenuTransformation(createCompositeMenuTransformation());
         newRoot.setMaxDragDistance(dragDistance);
         newRoot.setGravity(gravity);
         newRoot.setRootView(oldRoot);
@@ -223,6 +232,16 @@ public class SlidingRootNavBuilder {
             menuView = LayoutInflater.from(activity).inflate(menuLayoutRes, parent, false);
         }
         return menuView;
+    }
+
+    private RootTransformation createCompositeMenuTransformation() {
+        if (menuTransformations.isEmpty()) {
+            return new CompositeTransformation(Arrays.asList(
+                    new ScaleTransformation(DEFAULT_END_SCALE),
+                    new ElevationTransformation(dpToPx(DEFAULT_END_ELEVATION_DP))));
+        } else {
+            return new CompositeTransformation(menuTransformations);
+        }
     }
 
     private RootTransformation createCompositeTransformation() {

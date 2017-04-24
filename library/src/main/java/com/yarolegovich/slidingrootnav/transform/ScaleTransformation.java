@@ -10,14 +10,17 @@ import com.yarolegovich.slidingrootnav.util.SideNavUtils;
 
 public class ScaleTransformation implements RootTransformation {
 
-    private static final float START_SCALE = 1f;
+    private float START_SCALE = 1f;
 
     private final float endScale;
 
     public ScaleTransformation(float endScale) {
         this.endScale = endScale;
     }
-
+    public ScaleTransformation(float startScale, float endScale) {
+        this.endScale = endScale;
+        this.START_SCALE = startScale;
+    }
     @Override
     public void transform(float dragProgress, View rootView) {
         float scale = SideNavUtils.evaluate(dragProgress, START_SCALE, endScale);

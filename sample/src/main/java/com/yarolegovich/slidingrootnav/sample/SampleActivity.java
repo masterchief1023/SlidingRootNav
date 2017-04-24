@@ -12,6 +12,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.support.v7.widget.ViewUtils;
 
 import com.yarolegovich.slidingrootnav.SlidingRootNavBuilder;
 import com.yarolegovich.slidingrootnav.sample.menu.DrawerAdapter;
@@ -19,6 +20,9 @@ import com.yarolegovich.slidingrootnav.sample.menu.DrawerItem;
 import com.yarolegovich.slidingrootnav.sample.menu.SimpleItem;
 import com.yarolegovich.slidingrootnav.sample.menu.SpaceItem;
 import com.yarolegovich.slidingrootnav.sample.fragment.CenteredTextFragment;
+import com.yarolegovich.slidingrootnav.transform.ScaleTransformation;
+import com.yarolegovich.slidingrootnav.transform.XTranslationTransformation;
+import com.yarolegovich.slidingrootnav.transform.YTranslationTransformation;
 
 import java.util.Arrays;
 
@@ -36,7 +40,9 @@ public class SampleActivity extends AppCompatActivity implements DrawerAdapter.O
 
     private String[] screenTitles;
     private Drawable[] screenIcons;
-
+    private int dpToPx(int dp) {
+        return Math.round(this.getResources().getDisplayMetrics().density * dp);
+    }
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -50,6 +56,9 @@ public class SampleActivity extends AppCompatActivity implements DrawerAdapter.O
                 .withMenuOpened(true)
                 .withSavedState(savedInstanceState)
                 .withMenuLayout(R.layout.menu_left_drawer)
+                .withDragDistance(180)
+                .addMenuTransformation(new ScaleTransformation(0.5f,1f))
+                .addMenuTransformation(new XTranslationTransformation(-dpToPx(180), 0f))
                 .inject();
 
         screenIcons = loadScreenIcons();

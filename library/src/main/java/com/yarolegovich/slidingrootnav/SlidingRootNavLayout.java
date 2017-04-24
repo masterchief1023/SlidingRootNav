@@ -30,8 +30,9 @@ public class SlidingRootNavLayout extends FrameLayout implements SlidingRootNav 
     private boolean isMenuLocked;
 
     private RootTransformation rootTransformation;
+    private RootTransformation menuTransformation;
     private View rootView;
-
+    private View menuView;
     private float dragProgress;
     private int maxDragDistance;
     private int dragState;
@@ -92,6 +93,7 @@ public class SlidingRootNavLayout extends FrameLayout implements SlidingRootNav 
         } else {
             dragProgress = newDragProgress;
             rootTransformation.transform(dragProgress, rootView);
+            menuTransformation.transform(dragProgress, menuView);
             requestLayout();
         }
     }
@@ -138,6 +140,15 @@ public class SlidingRootNavLayout extends FrameLayout implements SlidingRootNav 
 
     public void setRootView(View view) {
         rootView = view;
+    }
+
+    public void setMenuView(View view){
+        menuView = view;
+    }
+
+
+    public void setMenuTransformation(RootTransformation transformation){
+        menuTransformation = transformation;
     }
 
     public void setRootTransformation(RootTransformation transformation) {
@@ -232,6 +243,7 @@ public class SlidingRootNavLayout extends FrameLayout implements SlidingRootNav 
         public void onViewPositionChanged(View changedView, int left, int top, int dx, int dy) {
             dragProgress = positionHelper.getDragProgress(left, maxDragDistance);
             rootTransformation.transform(dragProgress, rootView);
+            menuTransformation.transform(dragProgress, menuView);
             notifyDrag();
             invalidate();
         }
