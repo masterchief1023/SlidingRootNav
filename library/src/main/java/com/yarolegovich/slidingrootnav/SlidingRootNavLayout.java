@@ -1,6 +1,7 @@
 package com.yarolegovich.slidingrootnav;
 
 import android.content.Context;
+import android.graphics.Rect;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.support.v4.view.ViewCompat;
@@ -24,10 +25,15 @@ public class SlidingRootNavLayout extends FrameLayout implements SlidingRootNav 
 
     private static final String EXTRA_IS_OPENED = "extra_is_opened";
     private static final String EXTRA_SUPER = "extra_super";
+    private static final String EXTRA_SHOULD_BLOCK_CLICK = "extra_should_block_click";
+
+    private static final Rect tempRect = new Rect();
 
     private final float FLING_MIN_VELOCITY;
 
     private boolean isMenuLocked;
+    private boolean isMenuHidden;
+    private boolean isContentClickableWhenMenuOpened;
 
     private RootTransformation rootTransformation;
     private RootTransformation menuTransformation;
@@ -51,11 +57,16 @@ public class SlidingRootNavLayout extends FrameLayout implements SlidingRootNav 
         FLING_MIN_VELOCITY = ViewConfiguration.get(context).getScaledMinimumFlingVelocity();
 
         dragHelper = ViewDragHelper.create(this, new ViewDragCallback());
+
+        dragProgress = 0f;
+        isMenuHidden = true;
     }
 
     @Override
     public boolean onInterceptTouchEvent(MotionEvent ev) {
-        return !isMenuLocked && dragHelper.shouldInterceptTouchEvent(ev);
+        return (!isMenuLocked
+            && dragHelper.shouldInterceptTouchEvent(ev))
+            || shouldBlockClick(ev);
     }
 
     @Override
@@ -85,6 +96,7 @@ public class SlidingRootNavLayout extends FrameLayout implements SlidingRootNav 
     }
 
     private void changeMenuVisibility(boolean animated, float newDragProgress) {
+        isMenuHidden = calculateIsMenuHidden();
         if (animated) {
             int left = positionHelper.getLeftToSettle(newDragProgress, maxDragDistance);
             if (dragHelper.smoothSlideViewTo(rootView, left, rootView.getTop())) {
@@ -99,8 +111,12 @@ public class SlidingRootNavLayout extends FrameLayout implements SlidingRootNav 
     }
 
     @Override
-    public boolean isMenuHidden() {
-        return dragProgress == 0;
+    public boolean isMenuClosed() {
+        return isMenuHidden;
+    }
+
+    @Override public boolean isMenuOpened() {
+        return !isMenuHidden;
     }
 
     @Override
@@ -146,9 +162,12 @@ public class SlidingRootNavLayout extends FrameLayout implements SlidingRootNav 
         menuView = view;
     }
 
-
-    public void setMenuTransformation(RootTransformation transformation){
+    public void setMenuTransformation(RootTransformation transformation) {
         menuTransformation = transformation;
+    }
+
+    public void setContentClickableWhenMenuOpened(boolean contentClickableWhenMenuOpened) {
+        isContentClickableWhenMenuOpened = contentClickableWhenMenuOpened;
     }
 
     public void setRootTransformation(RootTransformation transformation) {
@@ -184,6 +203,19 @@ public class SlidingRootNavLayout extends FrameLayout implements SlidingRootNav 
         return dragProgress;
     }
 
+    private boolean shouldBlockClick(MotionEvent event) {
+        if (isContentClickableWhenMenuOpened) {
+            return false;
+        }
+        if (rootView != null && isMenuOpened()) {
+            rootView.getHitRect(tempRect);
+            if (tempRect.contains((int) event.getX(), (int) event.getY())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private void notifyDrag() {
         for (DragListener listener : dragListeners) {
             listener.onDrag(dragProgress);
@@ -207,6 +239,7 @@ public class SlidingRootNavLayout extends FrameLayout implements SlidingRootNav 
         Bundle savedState = new Bundle();
         savedState.putParcelable(EXTRA_SUPER, super.onSaveInstanceState());
         savedState.putInt(EXTRA_IS_OPENED, dragProgress > 0.5 ? 1 : 0);
+        savedState.putBoolean(EXTRA_SHOULD_BLOCK_CLICK, isContentClickableWhenMenuOpened);
         return savedState;
     }
 
@@ -215,6 +248,12 @@ public class SlidingRootNavLayout extends FrameLayout implements SlidingRootNav 
         Bundle savedState = (Bundle) state;
         super.onRestoreInstanceState(savedState.getParcelable(EXTRA_SUPER));
         changeMenuVisibility(false, savedState.getInt(EXTRA_IS_OPENED, 0));
+        isMenuHidden = calculateIsMenuHidden();
+        isContentClickableWhenMenuOpened = savedState.getBoolean(EXTRA_SHOULD_BLOCK_CLICK);
+    }
+
+    private boolean calculateIsMenuHidden() {
+        return dragProgress == 0f;
     }
 
     private class ViewDragCallback extends ViewDragHelper.Callback {
@@ -228,7 +267,7 @@ public class SlidingRootNavLayout extends FrameLayout implements SlidingRootNav 
             }
             boolean isOnEdge = edgeTouched;
             edgeTouched = false;
-            if (isMenuHidden()) {
+            if (isMenuClosed()) {
                 return child == rootView && isOnEdge;
             } else {
                 if (child != rootView) {
@@ -262,7 +301,8 @@ public class SlidingRootNavLayout extends FrameLayout implements SlidingRootNav 
             if (dragState == ViewDragHelper.STATE_IDLE && state != ViewDragHelper.STATE_IDLE) {
                 notifyDragStart();
             } else if (dragState != ViewDragHelper.STATE_IDLE && state == ViewDragHelper.STATE_IDLE) {
-                notifyDragEnd(!isMenuHidden());
+                isMenuHidden = calculateIsMenuHidden();
+                notifyDragEnd(isMenuOpened());
             }
             dragState = state;
         }

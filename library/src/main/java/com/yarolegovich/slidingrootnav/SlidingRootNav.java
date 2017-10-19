@@ -6,7 +6,9 @@ package com.yarolegovich.slidingrootnav;
 
 public interface SlidingRootNav {
 
-    boolean isMenuHidden();
+    boolean isMenuClosed();
+
+    boolean isMenuOpened();
 
     boolean isMenuLocked();
 

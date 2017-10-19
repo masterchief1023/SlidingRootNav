@@ -3,14 +3,15 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:2.3.0'
-        classpath 'com.novoda:bintray-release:0.4.0'
+        classpath 'com.android.tools.build:gradle:3.0.0-rc1'
+        classpath 'com.novoda:bintray-release:0.5.0'
     }
 }
 
 allprojects {
     repositories {
         jcenter()
+        maven { url "https://maven.google.com" }
     }
 }
 
@@ -23,6 +24,13 @@ ext {
     groupId = 'com.yarolegovich'
     uploadName = 'SlidingRootNav'
     description = 'DrawerLayout-like ViewGroup, where a "drawer" is hidden under the content view, which can be shifted to make the drawer visible.'
-    publishVersion = '1.0.2'
+    publishVersion = '1.1.0'
     licences = ['Apache-2.0']
+
+    compileSdkVersion = 26
+    buildToolsVersion = '26.0.2'
+    minSdkVersion = 16
+    targetSdkVersion = 26
+
+    supportLibVersion = '26.1.0'
 }
