@@ -172,7 +172,11 @@ public class SlidingRootNavBuilder {
         return this;
     }
 
-    public SlidingRootNav inject() {
+    public interface SlidingRootNavBuilderListener{
+        void onInjectCompleted(ActionBarDrawerToggle actionBarDrawerToggle);
+    }
+
+    public SlidingRootNav inject(SlidingRootNavBuilderListener slidingRootNavBuilderListener) {
         ViewGroup contentView = getContentView();
 
         View oldRoot = contentView.getChildAt(0);
@@ -183,7 +187,8 @@ public class SlidingRootNavBuilder {
         View menu = getMenuViewFor(newRoot);
         newRoot.setMenuView(menu);
 
-        initToolbarMenuVisibilityToggle(newRoot, menu);
+        ActionBarDrawerToggle actionBarDrawerToggle =
+                initToolbarMenuVisibilityToggle(newRoot, menu);
 
         HiddenMenuClickConsumer clickConsumer = new HiddenMenuClickConsumer(activity);
         clickConsumer.setMenuHost(newRoot);
@@ -201,7 +206,7 @@ public class SlidingRootNavBuilder {
         }
 
         newRoot.setMenuLocked(isMenuLocked);
-
+        slidingRootNavBuilderListener.onInjectCompleted(actionBarDrawerToggle);
         return newRoot;
     }
 
@@ -263,7 +268,7 @@ public class SlidingRootNavBuilder {
         }
     }
 
-    protected void initToolbarMenuVisibilityToggle(final SlidingRootNavLayout sideNav, View drawer) {
+    protected ActionBarDrawerToggle initToolbarMenuVisibilityToggle(final SlidingRootNavLayout sideNav, View drawer) {
         if (toolbar != null) {
             ActionBarToggleAdapter dlAdapter = new ActionBarToggleAdapter(activity);
             dlAdapter.setAdaptee(sideNav);
@@ -274,7 +279,9 @@ public class SlidingRootNavBuilder {
             DrawerListenerAdapter listenerAdapter = new DrawerListenerAdapter(toggle, drawer);
             sideNav.addDragListener(listenerAdapter);
             sideNav.addDragStateListener(listenerAdapter);
+            return toggle;
         }
+        return null;
     }
 
     private int dpToPx(int dp) {
